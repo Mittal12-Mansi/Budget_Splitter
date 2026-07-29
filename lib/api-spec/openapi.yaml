@@ -1,0 +1,973 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Smart Budget Splitter & Debt Graph API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: users
+    description: User operations
+  - name: groups
+    description: Group management
+  - name: expenses
+    description: Expense management
+  - name: balances
+    description: Balance calculations
+  - name: settlements
+    description: Debt settlements
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /groups:
+    get:
+      operationId: getGroups
+      tags: [groups]
+      summary: List groups for current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupWithStats"
+    post:
+      operationId: createGroup
+      tags: [groups]
+      summary: Create a group
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+
+  /groups/{groupId}:
+    get:
+      operationId: getGroup
+      tags: [groups]
+      summary: Get group by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateGroup
+      tags: [groups]
+      summary: Update group
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Group"
+    delete:
+      operationId: deleteGroup
+      tags: [groups]
+      summary: Delete group
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /groups/{groupId}/members:
+    post:
+      operationId: inviteMember
+      tags: [groups]
+      summary: Invite a member to a group
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteMemberInput"
+      responses:
+        "201":
+          description: Invited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Membership"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /groups/{groupId}/members/{userId}:
+    delete:
+      operationId: removeMember
+      tags: [groups]
+      summary: Remove member from group
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
+  /groups/{groupId}/expenses:
+    get:
+      operationId: getExpenses
+      tags: [expenses]
+      summary: List expenses in a group
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of expenses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ExpenseDetail"
+    post:
+      operationId: createExpense
+      tags: [expenses]
+      summary: Add an expense
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseDetail"
+
+  /groups/{groupId}/expenses/{expenseId}:
+    get:
+      operationId: getExpense
+      tags: [expenses]
+      summary: Get expense detail
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: expenseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Expense detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseDetail"
+    patch:
+      operationId: updateExpense
+      tags: [expenses]
+      summary: Update an expense
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: expenseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpenseUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExpenseDetail"
+    delete:
+      operationId: deleteExpense
+      tags: [expenses]
+      summary: Delete an expense
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: expenseId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /groups/{groupId}/balances:
+    get:
+      operationId: getBalances
+      tags: [balances]
+      summary: Get per-member balances in a group
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Balance summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceSummary"
+
+  /groups/{groupId}/debt-graph:
+    get:
+      operationId: getDebtGraph
+      tags: [balances]
+      summary: Get optimized debt settlement graph
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Debt graph
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DebtGraph"
+
+  /groups/{groupId}/settlements:
+    get:
+      operationId: getSettlements
+      tags: [settlements]
+      summary: List settlements in a group
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Settlements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Settlement"
+    post:
+      operationId: createSettlement
+      tags: [settlements]
+      summary: Record a settlement payment
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettlementInput"
+      responses:
+        "201":
+          description: Settlement recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Settlement"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [balances]
+      summary: Get dashboard summary for current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /users/search:
+    get:
+      operationId: searchUsers
+      tags: [users]
+      summary: Search users by email or name
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Matching users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 2
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, name, email, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    GroupInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        currency:
+          type: string
+          default: USD
+
+    GroupUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        currency:
+          type: string
+
+    Group:
+      type: object
+      required: [id, name, currency, ownerId, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        currency:
+          type: string
+        ownerId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+
+    GroupWithStats:
+      type: object
+      required: [id, name, currency, ownerId, createdAt, memberCount, totalExpenses, myBalance]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        currency:
+          type: string
+        ownerId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        memberCount:
+          type: integer
+        totalExpenses:
+          type: number
+        myBalance:
+          type: number
+
+    GroupDetail:
+      type: object
+      required: [id, name, currency, ownerId, createdAt, members]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: ["string", "null"]
+        currency:
+          type: string
+        ownerId:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberWithBalance"
+
+    Membership:
+      type: object
+      required: [id, groupId, userId, role, joinedAt]
+      properties:
+        id:
+          type: integer
+        groupId:
+          type: integer
+        userId:
+          type: integer
+        role:
+          type: string
+        joinedAt:
+          type: string
+          format: date-time
+
+    MemberWithBalance:
+      type: object
+      required: [id, userId, role, joinedAt, user, balance]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        role:
+          type: string
+        joinedAt:
+          type: string
+          format: date-time
+        user:
+          $ref: "#/components/schemas/User"
+        balance:
+          type: number
+
+    InviteMemberInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    ExpenseInput:
+      type: object
+      required: [description, amount, payerId, splitType]
+      properties:
+        description:
+          type: string
+          minLength: 1
+        amount:
+          type: number
+          minimum: 0.01
+        payerId:
+          type: integer
+        splitType:
+          type: string
+          enum: [equal, percentage, amount]
+        category:
+          type: string
+        splits:
+          type: array
+          items:
+            $ref: "#/components/schemas/SplitInput"
+
+    ExpenseUpdate:
+      type: object
+      properties:
+        description:
+          type: string
+        amount:
+          type: number
+        payerId:
+          type: integer
+        splitType:
+          type: string
+          enum: [equal, percentage, amount]
+        category:
+          type: string
+        splits:
+          type: array
+          items:
+            $ref: "#/components/schemas/SplitInput"
+
+    SplitInput:
+      type: object
+      required: [userId, value]
+      properties:
+        userId:
+          type: integer
+        value:
+          type: number
+
+    ExpenseDetail:
+      type: object
+      required: [id, groupId, description, amount, payerId, splitType, createdAt, payer, splits]
+      properties:
+        id:
+          type: integer
+        groupId:
+          type: integer
+        description:
+          type: string
+        amount:
+          type: number
+        payerId:
+          type: integer
+        splitType:
+          type: string
+        category:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        payer:
+          $ref: "#/components/schemas/User"
+        splits:
+          type: array
+          items:
+            $ref: "#/components/schemas/Split"
+
+    Split:
+      type: object
+      required: [id, expenseId, userId, amount, user]
+      properties:
+        id:
+          type: integer
+        expenseId:
+          type: integer
+        userId:
+          type: integer
+        amount:
+          type: number
+        user:
+          $ref: "#/components/schemas/User"
+
+    BalanceSummary:
+      type: object
+      required: [groupId, members, totalExpenses]
+      properties:
+        groupId:
+          type: integer
+        totalExpenses:
+          type: number
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/MemberBalance"
+
+    MemberBalance:
+      type: object
+      required: [userId, name, email, totalPaid, totalOwed, netBalance]
+      properties:
+        userId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        totalPaid:
+          type: number
+        totalOwed:
+          type: number
+        netBalance:
+          type: number
+
+    DebtGraph:
+      type: object
+      required: [groupId, nodes, edges, algorithm]
+      properties:
+        groupId:
+          type: integer
+        algorithm:
+          type: string
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DebtNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/DebtEdge"
+
+    DebtNode:
+      type: object
+      required: [userId, name, email, netBalance]
+      properties:
+        userId:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        netBalance:
+          type: number
+
+    DebtEdge:
+      type: object
+      required: [fromUserId, toUserId, amount, fromName, toName]
+      properties:
+        fromUserId:
+          type: integer
+        toUserId:
+          type: integer
+        amount:
+          type: number
+        fromName:
+          type: string
+        toName:
+          type: string
+
+    SettlementInput:
+      type: object
+      required: [payerId, receiverId, amount]
+      properties:
+        payerId:
+          type: integer
+        receiverId:
+          type: integer
+        amount:
+          type: number
+        note:
+          type: string
+
+    Settlement:
+      type: object
+      required: [id, groupId, payerId, receiverId, amount, createdAt, payer, receiver]
+      properties:
+        id:
+          type: integer
+        groupId:
+          type: integer
+        payerId:
+          type: integer
+        receiverId:
+          type: integer
+        amount:
+          type: number
+        note:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        payer:
+          $ref: "#/components/schemas/User"
+        receiver:
+          $ref: "#/components/schemas/User"
+
+    DashboardSummary:
+      type: object
+      required: [totalGroups, totalExpenses, totalOwed, totalOwe, recentActivity, groupSummaries]
+      properties:
+        totalGroups:
+          type: integer
+        totalExpenses:
+          type: number
+        totalOwed:
+          type: number
+        totalOwe:
+          type: number
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+        groupSummaries:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupWithStats"
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, amount, groupName, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        amount:
+          type: number
+        groupName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time

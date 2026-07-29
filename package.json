@@ -1,0 +1,27 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./backend\" --filter \"./frontend\" run dev",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./frontend\" --filter \"./backend\" --filter \"./scripts\" --if-present run typecheck"
+  },
+  "private": true,
+  "devDependencies": {
+    "@esbuild/win32-x64": "0.27.3",
+    "@parcel/watcher": "^2.5.6",
+    "@rollup/rollup-win32-x64-msvc": "^4.61.0",
+    "@tailwindcss/oxide-win32-x64-msvc": "^4.3.0",
+    "dotenv": "^17.4.2",
+    "esbuild": "0.27.3",
+    "lightningcss": "^1.32.0",
+    "lightningcss-win32-x64-msvc": "^1.32.0",
+    "prettier": "^3.8.3",
+    "typescript": "~5.9.3"
+  },
+  "dependencies": {
+    "cross-env": "^7.0.3"
+  }
+}

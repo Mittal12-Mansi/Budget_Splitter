@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment variables & secrets (DO NOT COMMIT SECRETS TO GIT)
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+.env.*.local
+*.pem
+
+# Build & Compilation Outputs
+dist/
+build/
+out-tsc/
+tmp/
+*.tsbuildinfo
+.vite/
+.turbo/
+
+# Logs & Temporary Files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+
+# IDEs & Editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.sublime-workspace
+*.swp
+*.swo
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+
+# Replit & Antigravity Agent Cache
+.cache/
+.local/
+.gemini/
