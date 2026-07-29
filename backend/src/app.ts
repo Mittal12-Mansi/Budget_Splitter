@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import { db, usersTable } from "@workspace/db";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -39,7 +40,6 @@ app.get("/api/health", (_req, res) => {
 
 app.get("/api/test-db", async (_req, res) => {
   try {
-    const { usersTable } = await import("@workspace/db");
     const users = await db.select().from(usersTable).limit(1);
     res.json({ status: "ok", message: "Database connection successful", usersCount: users.length });
   } catch (err: any) {
