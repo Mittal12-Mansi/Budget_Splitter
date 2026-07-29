@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "pnpm --parallel --filter \"./backend\" --filter \"./frontend\" run dev",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "build": "pnpm --filter \"./backend\" run build && pnpm --filter \"./frontend\" run build",
     "build:backend": "pnpm --filter \"./backend\" run build",
     "db:push": "pnpm --filter \"./lib/db\" run push",
     "db:push:force": "pnpm --filter \"./lib/db\" run push-force",
