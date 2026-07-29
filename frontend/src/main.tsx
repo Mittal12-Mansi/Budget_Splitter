@@ -3,7 +3,7 @@ import { setBaseUrl } from "@workspace/api-client-react";
 import App from "./App";
 import "./index.css";
 
-const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "https://budget-splitter-api.onrender.com" : "");
+const apiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? "https://budget-splitter.onrender.com" : "");
 if (apiUrl) {
   setBaseUrl(apiUrl);
 }
