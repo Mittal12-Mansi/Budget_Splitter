@@ -49,4 +49,14 @@ app.get("/api/test-db", async (_req, res) => {
 
 app.use("/api", router);
 
+// Global Error Handler Middleware (returns JSON errors instead of HTML)
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  logger.error({ err }, "Global express error handler caught exception");
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: err?.message || String(err),
+    stack: err?.stack,
+  });
+});
+
 export default app;
