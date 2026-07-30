@@ -21,14 +21,12 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-const isSslNeeded =
-  process.env.NODE_ENV === "production" ||
-  process.env.DATABASE_URL.includes("neon.tech") ||
-  process.env.DATABASE_URL.includes("sslmode=");
+const dbUrl = process.env.DATABASE_URL!;
+const isRemote = !dbUrl.includes("localhost") && !dbUrl.includes("127.0.0.1");
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: isSslNeeded ? { rejectUnauthorized: false } : undefined,
+  connectionString: dbUrl,
+  ssl: isRemote ? { rejectUnauthorized: false } : undefined,
 });
 export const db = drizzle(pool, { schema });
 

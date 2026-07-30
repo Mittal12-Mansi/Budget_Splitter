@@ -20,6 +20,7 @@
     "typescript": "~5.9.3"
   },
   "dependencies": {
-    "cross-env": "^7.0.3"
+    "cross-env": "^7.0.3",
+    "pg": "^8.20.0"
   }
 }

@@ -43,7 +43,7 @@ app.get("/api/test-db", async (_req, res) => {
     const users = await db.select().from(usersTable).limit(1);
     res.json({ status: "ok", message: "Database connection successful", usersCount: users.length });
   } catch (err: any) {
-    res.status(500).json({ status: "error", message: err.message, name: err.name, stack: err.stack });
+    res.status(500).json({ status: "error", message: err.message, cause: err.cause?.message || err.cause || String(err), name: err.name, stack: err.stack });
   }
 });
 
