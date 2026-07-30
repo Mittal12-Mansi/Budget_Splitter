@@ -4,6 +4,16 @@
 
 ---
 
+## 🚀 Live Demo & Deployment
+
+| Service | Platform | Status | Live Link |
+| :--- | :--- | :---: | :--- |
+| **Frontend Web App** | Vercel | 🟢 Live | [budget-splitter-frontend.vercel.app](https://budget-splitter-frontend.vercel.app) |
+| **Backend API Server** | Render | 🟢 Live | [budget-splitter.onrender.com](https://budget-splitter.onrender.com) |
+| **Cloud Database** | Neon PostgreSQL | 🟢 Live | Serverless PostgreSQL (`neondb`) |
+
+---
+
 ## ✨ Feature Highlights
 
 | Feature | Highlight | Key Capabilities |
@@ -36,8 +46,9 @@
 | :--- | :--- |
 | **Frontend** | React 19, TypeScript, Vite, Tailwind CSS v4, Wouter, Lucide Icons, Recharts, TanStack Query |
 | **Backend** | Node.js, Express, TypeScript, Drizzle ORM, Pino Logger |
-| **Database** | PostgreSQL |
-| **Tooling & Monorepo** | pnpm Workspaces, Zod, Orval API Generator, bcryptjs |
+| **Database** | Neon Cloud PostgreSQL |
+| **Deployment** | Vercel (Frontend), Render (Backend), Neon (Database) |
+| **Tooling & Monorepo** | pnpm Workspaces, Zod, Orval API Generator, bcryptjs, JWT |
 
 ---
 
@@ -57,7 +68,7 @@ cp .env.example .env
 ```
 Set your PostgreSQL connection string in `.env`:
 ```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/budget_splitter
+DATABASE_URL=postgresql://neondb_owner:npg_gMdfVub0hi1t@ep-round-shadow-ayilpsel.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require
 JWT_SECRET=your_super_secret_jwt_key
 PORT=5000
 ```
